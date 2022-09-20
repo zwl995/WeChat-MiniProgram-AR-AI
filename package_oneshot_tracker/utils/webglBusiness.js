@@ -1,6 +1,5 @@
 var renderer,_program,_dt,_vao,_vao_ext;
 
-
 function initShader() {
   const gl = renderer.getContext()
   const currentProgram = gl.getParameter(gl.CURRENT_PROGRAM)

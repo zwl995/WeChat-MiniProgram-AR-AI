@@ -20,7 +20,7 @@
             <view class="weui-panel__hd">AR+效率</view>
             <view class="weui-panel__bd">
                 <view class="weui-media-box weui-media-box_text">
-                    <view class="weui-media-box__desc">用AR测量平面上物体的长度。</view>
+                    <view class="weui-media-box__desc">用AR测量平面上物体的长度。注：V1版测量结果不准确。如果要准确的测量，请使用V2版小程序AR。</view>
                     <view class="weui-media-box__info">
                         <navigator url="/package_measure/pages/camera/camera" class="marginTop10">
                             <button class="weui-btn" type="primary">试一试</button>
@@ -50,7 +50,7 @@
             <view class="weui-panel__hd">AR+AI</view>
             <view class="weui-panel__bd">
                 <view class="weui-media-box weui-media-box_text">
-                    <view class="weui-media-box__desc">用AI检测图像中的物体，将名称显示在物体上。</view>
+                    <view class="weui-media-box__desc">用AI检测图像中的物体，将名称固定地显示在物体上。</view>
                     <view class="weui-media-box__info">
                            <navigator url="/package_image_classify/pages/camera/camera" class="marginTop10">
                             <button class="weui-btn" type="primary">试一试</button>
@@ -65,7 +65,7 @@
             <view class="weui-panel__hd">AI人脸检测</view>
             <view class="weui-panel__bd">
                 <view class="weui-media-box weui-media-box_text">
-                    <view class="weui-media-box__desc">根据AI检测的人脸姿态，将虚拟眼镜佩戴在人脸上。</view>
+                    <view class="weui-media-box__desc">根据人脸姿态，将虚拟眼镜佩戴在人脸上。</view>
                     <view class="weui-media-box__info">
                         <navigator url="/package_face_detect/pages/camera/camera" class="marginTop10">
                             <button class="weui-btn" type="primary">试一试</button>
@@ -77,6 +77,21 @@
                 </view>
             </view>
         </view>
+
+                <!-- One-Shot tracker -->
+                <view class="weui-panel">
+                    <view class="weui-panel__hd">单样本检测</view>
+                    <view class="weui-panel__bd">
+                        <view class="weui-media-box weui-media-box_text">
+                            <view class="weui-media-box__desc">利用深度学习检测现实环境中目标物体的位置。</view>
+                            <view class="weui-media-box__info">
+                                   <navigator url="/package_oneshot_tracker/pages/camera/camera" class="marginTop10">
+                                    <button class="weui-btn" type="primary">试一试</button>
+                                </navigator>
+                            </view>
+                        </view>
+                    </view>
+                </view>
 
     </view>
 </view>

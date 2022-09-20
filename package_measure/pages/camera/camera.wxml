@@ -5,7 +5,7 @@
     <!--后退按钮图标-->
     <cover-image 
         style="width:{{menuButtonHeight}}px;height:{{menuButtonHeight}}px;" 
-        src="/assets/back.png">
+        src="/imgs/back.png">
     </cover-image>
 </cover-view>
 
@@ -16,7 +16,7 @@
         disable-scroll = "true"
         bindtouchend="bindtouchend_callback">
         <cover-view class="cover-view">
-            <cover-view>测量结果：{{measureResult}}米</cover-view>
+            <cover-view>测量结果：{{measureResult}}厘米</cover-view>
         </cover-view>         
 </canvas>
 

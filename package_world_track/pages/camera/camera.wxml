@@ -5,7 +5,7 @@
     <!--后退按钮图标-->
     <cover-image 
         style="width:{{menuButtonHeight}}px;height:{{menuButtonHeight}}px;" 
-        src="/assets/back.png">
+        src="/imgs/back.png">
     </cover-image>
 </cover-view>
 

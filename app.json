@@ -33,12 +33,18 @@
       "pages": [
         "pages/camera/camera"
       ]
+    },
+    {
+      "root": "package_oneshot_tracker",
+      "pages": [
+        "pages/camera/camera"
+      ]
     }
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "微信小程序AR",
+    "navigationBarTitleText": "V1版小程序AR",
     "navigationBarTextStyle": "black"
   },
   "sitemapLocation": "sitemap.json"

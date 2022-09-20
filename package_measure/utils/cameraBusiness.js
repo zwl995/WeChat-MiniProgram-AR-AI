@@ -353,7 +353,7 @@ function setRuler(callback) {
             if (callback) {
                 // 测量的距离
                 var distance = currentPoint.distanceTo(lastPoint)
-                distance = (distance / 10).toFixed(2)
+                distance = (distance * 10).toFixed(1)
                 callback(distance)
             }
         }

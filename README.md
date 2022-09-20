@@ -2,6 +2,7 @@
 
 | 日期　　　| 内容 |
 | -- | -- |
+| 2022-09-20 | 新增：单样本检测功能。更新：webglBusiness.js升级到官方最新版，也保留了Android深度冲突现象的修复代码。修复：1、在开发者工具预览时，提示超过2MB大小的问题。2、Three.PlaneGeometry、Three.BoxGeometry等的纹理贴图变为黑色，同时画面镜像和闪烁。 |
 | 2022-01-05 | 新增：1、AR空间化音频 2、AR+AI图像分类 3、AR玩具机器人增加录制视频功能。|
 | 2022-01-01 | 修复：Android手机画面深度冲突的第3种修改方法。 |
 | 2021-12-24 | 修复：使用顶部导航条，遮挡Android手机画面的深度冲突现象。 |
@@ -14,15 +15,17 @@
 
 本项目包含以下AR和AI示例。
 
-AR+内容：用AR平面跟踪显示玩具机器人。
+AR+内容：用AR平面跟踪显示玩具机器人。目录package_world_track。
 
-AR+效率：用AR测量平面上物体的长度。
+AR+效率：用AR测量平面上物体的长度。目录package_measure。
 
-AR+游戏：用AR跟随用户位置变化的空间化音频。
+AR+游戏：用AR跟随用户位置变化的空间化音频。目录package_spatial_audio。
 
-AR+AI：用AI检测图像中的物体，将名称显示在物体上。
+AI人脸检测：根据AI检测的人脸姿态，将虚拟眼镜佩戴在人脸上。目录package_face_detect。
 
-AI人脸检测：根据AI检测的人脸姿态，将虚拟眼镜佩戴在人脸上。
+AR+AI：用AI检测图像中的物体，将名称显示在物体上。目录package_image_classify。
+
+单样本检测：只用一张图片，检测现实环境中目标物体的位置。目录package_oneshot_tracker。
 
 ## 引用
 
@@ -42,6 +45,9 @@ Tensorflow.js图像分类
 
 https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
 
+单样本检测
+
+https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/visionkit/osd.html
 
 首页
 
@@ -101,7 +107,9 @@ https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
 
 ## 如何使用
 
-使用微信开发者工具，打开项目源代码，在手机上预览。
+1、使用微信开发者工具，打开项目源代码，在手机上预览。
+
+2、如果遇到模型不加载、图片不显示等状况，请打开小程序的调试模式。
 
 ## 如果更换3D模型
 

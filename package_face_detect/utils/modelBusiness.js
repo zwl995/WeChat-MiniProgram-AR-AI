@@ -186,7 +186,7 @@ function calcPose(prediction) {
         -angleArray.roll,
         'XYZ')
 
-    // origin distince
+    // origin distance
     var p_A = new THREE.Vector3(trackPointA.x,
         trackPointA.y,
         0)
@@ -195,7 +195,7 @@ function calcPose(prediction) {
         0)
     var originDistance = p_A.distanceTo(p_B);
 
-    // current distince
+    // current distance
     var p_a = new THREE.Vector3(a.x,
         a.y,
         0)
