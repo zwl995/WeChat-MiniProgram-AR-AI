@@ -11,3 +11,7 @@
 .marginTop10{
     margin-top:10px;
 }
+
+.color-red{
+    color: red;
+}

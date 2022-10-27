@@ -9,12 +9,14 @@ const modelUrl = 'https://m.sanyue.red/demo/gltf/sunglass.glb';
 var listener = null;
 
 Page({
+    frameWidth: 0,
+    frameHeight: 0,
     data: {
         devicePosition: 'front',
     },
     onReady() {
         var _that = this;
-        face.initFaceDetect();
+        face.initFaceDetect(_that.initFaceDetect_callback);
         // load a 3D model
         model.initThree(canvasWebGLId, modelUrl);
         // start camera tracking
@@ -28,14 +30,31 @@ Page({
         model.stopAnimate();
         model.dispose();
     },
+    initFaceDetect_callback(predictions) {
+        if (predictions && predictions.length > 0) {
+            var canvasWidth = this.frameWidth;
+            var canvasHeight = this.frameHeight;
+            var prediction = predictions[0]
+
+            // set the rotation and position of the 3d model.    
+            model.setModel(prediction,
+                canvasWidth,
+                canvasHeight);
+        } else {
+            var message = 'No results.';
+            wx.showToast({
+                title: message,
+                icon: 'none'
+            });
+        }
+    },
     startTacking() {
         var _that = this;
         var count = 0;
         const context = wx.createCameraContext();
 
         // real-time
-        listener = context.onCameraFrame(async function (res) {
-
+        listener = context.onCameraFrame(function (res) {
             // this is throttling
             if (count < cameraFrameMax) {
                 count++;
@@ -44,30 +63,15 @@ Page({
             count = 0;
             console.log('onCameraFrame:', res.width, res.height);
             const frame = {
-                // the data type is ArrayBuffer for face Detect
+                // the data type is ArrayBuffer
                 data: res.data,
                 width: res.width,
                 height: res.height,
             };
-
+            _that.frameWidth = frame.width
+            _that.frameHeight = frame.height
             // process
-            face.faceDetect(frame, function (prediction) {
-                if (prediction && prediction.x != -1 && prediction.y != -1) {
-                    var canvasWidth = frame.width;
-                    var canvasHeight = frame.height;
-
-                    // set the rotation and position of the 3d model.    
-                    model.setModel(prediction,
-                        canvasWidth,
-                        canvasHeight);
-                } else {
-                    var message = 'No results.';
-                    wx.showToast({
-                        title: message,
-                        icon: 'none'
-                    });
-                }
-            });
+            face.faceDetect(frame, 0);
         });
         // start
         listener.start();

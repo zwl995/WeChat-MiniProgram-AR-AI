@@ -11,6 +11,13 @@
       ]
     },
     {
+      "root": "package_face_detect_v2",
+      "pages": [
+        "pages/photo/photo",
+        "pages/camera/camera"
+      ]
+    },
+    {
       "root": "package_measure",
       "pages": [
         "pages/camera/camera"
@@ -37,6 +44,13 @@
     {
       "root": "package_oneshot_tracker",
       "pages": [
+        "pages/camera/camera"
+      ]
+    },
+    {
+      "root": "package_text_detect",
+      "pages": [
+        "pages/photo/photo",
         "pages/camera/camera"
       ]
     }

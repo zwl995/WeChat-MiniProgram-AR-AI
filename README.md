@@ -2,6 +2,7 @@
 
 | 日期　　　| 内容 |
 | -- | -- |
+| 2022-10-27 | 新增：AI人脸检测（新版）、AI文本检测等。 |
 | 2022-09-20 | 新增：单样本检测功能。更新：webglBusiness.js升级到官方最新版，也保留了Android深度冲突现象的修复代码。修复：1、在开发者工具预览时，提示超过2MB大小的问题。2、Three.PlaneGeometry、Three.BoxGeometry等的纹理贴图变为黑色，同时画面镜像和闪烁。 |
 | 2022-01-05 | 新增：1、AR空间化音频 2、AR+AI图像分类 3、AR玩具机器人增加录制视频功能。|
 | 2022-01-01 | 修复：Android手机画面深度冲突的第3种修改方法。 |
@@ -21,11 +22,15 @@ AR+效率：用AR测量平面上物体的长度。目录package_measure。
 
 AR+游戏：用AR跟随用户位置变化的空间化音频。目录package_spatial_audio。
 
-AI人脸检测：根据AI检测的人脸姿态，将虚拟眼镜佩戴在人脸上。目录package_face_detect。
+AI人脸检测（旧版）：根据AI检测的人脸姿态，将虚拟眼镜佩戴在人脸上。目录package_face_detect。
 
 AR+AI：用AI检测图像中的物体，将名称显示在物体上。目录package_image_classify。
 
 单样本检测：只用一张图片，检测现实环境中目标物体的位置。目录package_oneshot_tracker。
+
+AI人脸检测（新版）：根据AI检测的人脸姿态，将虚拟眼镜佩戴在人脸上。目录package_face_detect_v2。
+
+AI文本检测：检测图片和摄像头画面中的文字。目录package_text_detect。
 
 ## 引用
 
@@ -41,7 +46,7 @@ Web Audio空间化音频
 
 https://threejs.org/examples/?q=audio#webaudio_orientation
 
-Tensorflow.js图像分类
+Tensorflow.js目标分类
 
 https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
 
@@ -49,9 +54,14 @@ https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
 
 https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/visionkit/osd.html
 
+文本检测
+
+https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/visionkit/ocr.html
+
 首页
 
 ![avatar](screenshot/0.jpg)
+![avatar](screenshot/0-2.jpg)
 
 ## AR+内容
 
@@ -103,6 +113,13 @@ https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/visionki
 检测旋转的人脸
 
 ![avatar](screenshot/1-2.jpg)
+
+
+## AI文本检测
+
+实时地检测摄像头画面中的中文、英文、数字等。
+
+![avatar](screenshot/7.jpg)
 
 
 ## 如何使用
