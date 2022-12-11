@@ -37,11 +37,9 @@ function initWorldTrack(model) {
             console.log('initWorld ok')
 
             if (model) {
-                model.matrixAutoUpdate = true
+                model.matrixAutoUpdate = false
                 // 将hitTest返回的transform，变换到3D模型的姿态。
                 model.matrix.fromArray(hitTestRes[0].transform)
-                // 将矩阵分解到平移position、旋转quaternion，但不修改缩放scale。
-                model.matrix.decompose(model.position, model.quaternion, new THREE.Vector3())
                 // 添加模型到场景
                 scene.add(model)
             }
@@ -66,12 +64,16 @@ function loadModel(modelUrl, callback) {
             console.log('loadModel', 'success');
             wx.hideLoading();
             var model = gltf.scene;
-            model.scale.set(modelScale, modelScale, modelScale)
-            mainModel = model;
             var animations = gltf.animations;
 
+            model.scale.set(modelScale, modelScale, modelScale)
+            // 矩阵更新只会影响父对象host_mainModel，不影响子对象model。
+            var host_mainModel = new THREE.Object3D()
+            host_mainModel.add(model)
+            mainModel = host_mainModel;
+
             if (callback) {
-                callback(model, animations);
+                callback(mainModel, animations);
             }
         },
         null,
@@ -86,39 +88,6 @@ function loadModel(modelUrl, callback) {
         });
 }
 
-// 更新3D模型地址
-function updateModel(modelUrl) {
-    var loader = new THREE.GLTFLoader();
-    // loading
-    wx.showLoading({
-        title: 'Loading Model...',
-    });
-    loader.load(modelUrl,
-        function (gltf) {
-            console.log('loadModel', 'success');
-            var model = gltf.scene;
-            // 复制已有模型的变换
-            addModelByReticle(model, mainModel, true)
-            // remove old model
-            scene.remove(mainModel);
-            // save new model
-            mainModel = model;
-
-            wx.hideLoading();
-        },
-        null,
-        function (error) {
-            console.log('loadModel', error);
-            wx.hideLoading();
-            wx.showToast({
-                title: 'Loading model failed.',
-                icon: 'none',
-                duration: 3000,
-            });
-        });
-
-    wx.hideLoading();
-}
 
 // 加载3D模型的动画
 function createAnimation(model, animations, clipName) {
@@ -149,31 +118,11 @@ function updateAnimation() {
     }
 }
 
-// 更新光标模型的位置
-function updateReticle() {
-    if (!reticle) {
-        return
-    }
-
-    const hitTestRes = session.hitTest(0.5, 0.5)
-
-    if (hitTestRes && hitTestRes.length) {
-        reticle.matrixAutoUpdate = false
-        reticle.matrix.fromArray(hitTestRes[0].transform)
-        // 将矩阵分解到平移position、旋转quaternion、缩放scale。
-        reticle.matrix.decompose(reticle.position, reticle.quaternion, scale_vector)
-        reticle.visible = true
-    } else {
-        reticle.visible = false
-    }
-}
 
 // 在threejs的每帧渲染中，使用AR相机更新threejs相机的变换。
 function render(frame) {
     // 更新threejs场景的背景
     webglBusiness.renderGL(frame)
-    // 更新光标模型的位置
-    updateReticle()
     // 更新3D模型的动画
     updateAnimation()
     // 从ar每帧图像获取ar相机对象
@@ -299,19 +248,6 @@ function initEnvironment(canvasDom) {
     })
 }
 
-// 在光标的位置放置3D模型
-// model:3D模型对象 
-// copyModel：被复制的3D模型对象 
-// isAddModel:是否将3D模型加入到threejs场景
-function addModelByReticle(model, copyModel, isAddModel) {
-    model.matrixAutoUpdate = true
-    model.position.copy(copyModel.position)
-    model.rotation.copy(copyModel.rotation)
-    console.log('addModelByReticle')
-    if (isAddModel) {
-        scene.add(model)
-    }
-}
 
 // 在手指点击的位置放置3D模型
 // resetPanel：是否用现实环境中新的平面作为AR的空间坐标系 
@@ -322,15 +258,14 @@ function addModelByHitTest(evt, resetPanel, isAddModel) {
     const touches = evt.changedTouches.length ? evt.changedTouches : evt.touches
     if (touches.length === 1) {
         const touch = touches[0]
+
         const hitTestRes = session.hitTest(touch.x * devicePixelRatio / canvas.width,
             touch.y * devicePixelRatio / canvas.height,
             resetPanel)
 
         if (hitTestRes && hitTestRes.length) {
-            mainModel.matrixAutoUpdate = true
+            mainModel.matrixAutoUpdate = false
             mainModel.matrix.fromArray(hitTestRes[0].transform)
-            // 将矩阵分解到平移position、旋转quaternion，但不修改缩放scale。
-            mainModel.matrix.decompose(mainModel.position, mainModel.quaternion, new THREE.Vector3())
             console.log('addModelByHitTest', mainModel.position)
 
             if (isAddModel) {
@@ -390,15 +325,11 @@ function dispose() {
 
 module.exports = {
     loadModel,
-    updateModel,
-    render,
     initWorldTrack,
-    updateReticle,
     initEnvironment,
     initTHREE,
     createAnimation,
     updateAnimation,
-    addModelByReticle,
     addModelByHitTest,
     dispose,
 }

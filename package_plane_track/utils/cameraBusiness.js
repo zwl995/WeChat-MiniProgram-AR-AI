@@ -4,8 +4,6 @@ const { createScopedThreejs } = require('threejs-miniprogram');
 const { registerGLTFLoader } = require('../../utils/gltf-loader.js');
 // 相机每帧图像作为threejs场景的背景图
 const webglBusiness = require('./webglBusiness.js')
-// 绘制线条
-const { TubePainter } = require('./tubePainter.js')
 // 近截面
 const NEAR = 0.001
 // 远截面
@@ -25,14 +23,10 @@ var session;
 var reticle, clock;
 // 保存3D模型的动画
 var mixers = [];
-// 绘制线条的工具
-var painter;
-// 是否开始绘制线条
-var isStartPaint = false;
-// 最近点击光标的位置
-var lastPoint;
 // 设备像素比例
 var devicePixelRatio;
+// 模型的默认缩放大小
+const modelScale = 0.5;
 
 // 创建AR的坐标系
 function initWorldTrack(model) {
@@ -43,12 +37,9 @@ function initWorldTrack(model) {
             console.log('initWorld ok')
 
             if (model) {
-                // 更新3D模型的姿态
-                model.matrixAutoUpdate = true
+                model.matrixAutoUpdate = false
                 // 将hitTest返回的transform，变换到3D模型的姿态。
                 model.matrix.fromArray(hitTestRes[0].transform)
-                // 将矩阵分解到平移position、旋转quaternion，但不修改缩放scale。
-                model.matrix.decompose(model.position, model.quaternion, new THREE.Vector3())
                 // 添加模型到场景
                 scene.add(model)
             }
@@ -71,17 +62,18 @@ function loadModel(modelUrl, callback) {
     loader.load(modelUrl,
         function (gltf) {
             console.log('loadModel', 'success');
+            wx.hideLoading();
             var model = gltf.scene;
             var animations = gltf.animations;
 
+            model.scale.set(modelScale, modelScale, modelScale)
             // 矩阵更新只会影响父对象host_mainModel，不影响子对象model。
             var host_mainModel = new THREE.Object3D()
             host_mainModel.add(model)
             mainModel = host_mainModel;
-            wx.hideLoading();
 
             if (callback) {
-                callback(mainModel, animations)
+                callback(mainModel, animations);
             }
         },
         null,
@@ -95,6 +87,7 @@ function loadModel(modelUrl, callback) {
             });
         });
 }
+
 
 // 加载3D模型的动画
 function createAnimation(model, animations, clipName) {
@@ -125,31 +118,11 @@ function updateAnimation() {
     }
 }
 
-// 更新光标模型的位置
-function updateReticle() {
-    if (!reticle) {
-        return
-    }
-
-    const hitTestRes = session.hitTest(0.5, 0.5)
-
-    if (hitTestRes && hitTestRes.length) {
-        reticle.matrixAutoUpdate = true
-        reticle.matrix.fromArray(hitTestRes[0].transform)
-        // 将矩阵分解到平移position、旋转quaternion、缩放scale。
-        reticle.matrix.decompose(reticle.position, reticle.quaternion, new THREE.Vector3())
-        reticle.visible = true
-    } else {
-        reticle.visible = false
-    }
-}
 
 // 在threejs的每帧渲染中，使用AR相机更新threejs相机的变换。
 function render(frame) {
     // 更新threejs场景的背景
     webglBusiness.renderGL(frame)
-    // 更新光标模型的位置
-    updateReticle()
     // 更新3D模型的动画
     updateAnimation()
     // 从ar每帧图像获取ar相机对象
@@ -195,21 +168,16 @@ function initTHREE() {
     light2.position.set(0, 0.2, 0.1)
     scene.add(light2)
 
-    // 绘制线条的辅助工具
-    painter = new TubePainter(THREE);
-    painter.setSize(0.4);
-    painter.mesh.material.side = THREE.DoubleSide;
-    scene.add(painter.mesh);
-
     // 渲染层
     renderer = new THREE.WebGLRenderer({
         antialias: true,
-        alpha: true
+        alpha: true,
     })
 
+    // 因为场景中只有平面图像，图像显得太白太亮，所以注释掉了。
     // gamma色彩空间校正，以适应人眼对亮度的感觉。
-    renderer.gammaOutput = true
-    renderer.gammaFactor = 2.2
+    // renderer.gammaOutput = true
+    // renderer.gammaFactor = 2.2
 
     // 时间跟踪器用作3D模型动画的更新
     clock = new THREE.Clock()
@@ -281,69 +249,30 @@ function initEnvironment(canvasDom) {
     })
 }
 
-// 保存光标模型
-function setReticle(model) {
-    reticle = model
-    scene.add(reticle)
-}
 
-function addPoint(color) {
-    const geometry = new THREE.CylinderGeometry(0.03, 0.03, 0.03, 32);
-    const material = new THREE.MeshBasicMaterial({ color: color });
-    const cylinder = new THREE.Mesh(geometry, material);
-    addModelByReticle(cylinder, reticle, true)
-}
+// 在手指点击的位置放置3D模型
+// resetPanel：是否用现实环境中新的平面作为AR的空间坐标系 
+// evt：触摸事件 
+// isAddModel:是否将3D模型加入到threejs场景
+function addModelByHitTest(evt, resetPanel, isAddModel) {
+    // 点击可移动3D模型位置
+    const touches = evt.changedTouches.length ? evt.changedTouches : evt.touches
+    if (touches.length === 1) {
+        const touch = touches[0]
 
-// 在光标的位置放置3D模型
-function setRuler(callback) {
-    if (!reticle || !painter) {
-        return
-    }
+        const hitTestRes = session.hitTest(touch.x * devicePixelRatio / canvas.width,
+            touch.y * devicePixelRatio / canvas.height,
+            resetPanel)
 
-    const currentPoint = reticle.position
-    if (!isStartPaint) {
-        // 测量开始
-        isStartPaint = true
-        // 测量开始时，移动到点击光标的位置
-        painter.moveTo(currentPoint)
-        // 开始点
-        addPoint(0x66cc00)
-    } else {
-        // 测量结束
-        isStartPaint = false
-        // 测量过程中，绘制线条
-        painter.lineTo(currentPoint)
-        painter.update()
-        // 结束点
-        addPoint(0xff3300)
+        if (hitTestRes && hitTestRes.length) {
+            mainModel.matrixAutoUpdate = false
+            mainModel.matrix.fromArray(hitTestRes[0].transform)
+            console.log('addModelByHitTest', mainModel.position)
 
-        if (lastPoint) {
-            if (callback) {
-                // 测量的距离
-                var distance = currentPoint.distanceTo(lastPoint)
-                distance = (distance * 10).toFixed(1)
-                callback(distance)
+            if (isAddModel) {
+                scene.add(mainModel)
             }
         }
-
-    }
-
-    // 保存最近点击光标的位置
-    lastPoint = currentPoint.clone()
-}
-
-// 在光标的位置放置3D模型
-// model:3D模型对象 
-// copyModel：被复制的3D模型对象 
-// isAddModel:是否将3D模型加入到threejs场景
-function addModelByReticle(model, copyModel, isAddModel) {
-    model.matrixAutoUpdate = true
-    model.position.copy(copyModel.position)
-    model.rotation.copy(copyModel.rotation)
-    console.log('addModelByReticle', copyModel.position)
-
-    if (isAddModel) {
-        scene.add(model)
     }
 }
 
@@ -383,14 +312,13 @@ function dispose() {
     if (session) {
         session = null
     }
+
     if (reticle) {
         reticle = null
     }
-    if (painter) {
-        painter = null
-    }
-    if (lastPoint) {
-        lastPoint = null
+
+    if (devicePixelRatio) {
+        devicePixelRatio = null
     }
 
     webglBusiness.dispose()
@@ -398,15 +326,11 @@ function dispose() {
 
 module.exports = {
     loadModel,
-    render,
     initWorldTrack,
-    updateReticle,
     initEnvironment,
     initTHREE,
     createAnimation,
     updateAnimation,
-    addModelByReticle,
-    setReticle,
-    setRuler,
+    addModelByHitTest,
     dispose,
 }

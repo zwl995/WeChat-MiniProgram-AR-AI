@@ -4,7 +4,7 @@
   ],
   "subpackages": [
     {
-      "root": "package_face_detect",
+      "root": "package_body_detect",
       "pages": [
         "pages/photo/photo",
         "pages/camera/camera"
@@ -18,25 +18,20 @@
       ]
     },
     {
+      "root": "package_hand_gesture",
+      "pages": [
+        "pages/photo/photo",
+        "pages/camera/camera"
+      ]
+    },
+    {
+      "root": "package_image_tracker",
+      "pages": [
+        "pages/camera/camera"
+      ]
+    },
+    {
       "root": "package_measure",
-      "pages": [
-        "pages/camera/camera"
-      ]
-    },
-    {
-      "root": "package_world_track",
-      "pages": [
-        "pages/camera/camera"
-      ]
-    },
-    {
-      "root": "package_spatial_audio",
-      "pages": [
-        "pages/camera/camera"
-      ]
-    },
-    {
-      "root": "package_image_classify",
       "pages": [
         "pages/camera/camera"
       ]
@@ -48,9 +43,27 @@
       ]
     },
     {
+      "root": "package_plane_track",
+      "pages": [
+        "pages/camera/camera"
+      ]
+    },
+    {
+      "root": "package_spatial_audio",
+      "pages": [
+        "pages/camera/camera"
+      ]
+    },
+    {
       "root": "package_text_detect",
       "pages": [
         "pages/photo/photo",
+        "pages/camera/camera"
+      ]
+    },
+    {
+      "root": "package_world_track",
+      "pages": [
         "pages/camera/camera"
       ]
     }

@@ -165,6 +165,8 @@ function setModel(prediction,
 }
 
 function calcPose(prediction) {
+    console.log('calcPose',canvasWidth,canvasHeight)
+
     // prediction.points是归一化的坐标
     var _a = prediction.points[trackPointA.id];
     var _b = prediction.points[trackPointB.id];

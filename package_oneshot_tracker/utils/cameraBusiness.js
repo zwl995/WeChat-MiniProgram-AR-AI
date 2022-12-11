@@ -44,7 +44,6 @@ function initWorldTrack(_that) {
         const anchor = anchors[0]
 
         if (anchor) {
-
             _that.setData({
                 frameShow: true,
                 frameX: anchor.origin.x * screenWidth,
@@ -82,11 +81,8 @@ function initWorldTrack(_that) {
         title: '请对准识别图...',
     });
 
-    // 这个1000毫秒是等待AR Session完成准备工作
-    // 如果不等待AR Session，则可能session.addOSDMarker()运行成功，但没有单样本检测的效果。
-    setTimeout(function () {
-        addOSDMarker()
-    }, 1000)
+    // 在session.start()成功后，session.addOSDMarker()才会起作用。
+    addOSDMarker()
 }
 
 function addOSDMarker() {
@@ -185,7 +181,7 @@ function calcCanvasSize() {
 }
 
 // 启动AR会话
-function initEnvironment(canvasDom) {
+function initEnvironment(canvasDom, callback) {
     console.log('initEnvironment')
     // 画布组件的对象
     canvas = canvasDom
@@ -201,7 +197,7 @@ function initEnvironment(canvasDom) {
     if (!session.addOSDMarker) {
         wx.showModal({
             title: '提示',
-            content: '由于该功能较新，需要WX版本号8.0.22以上运行。',
+            content: '由于该功能较新，需要微信版本号8.0.22以上运行。',
             showCancel: false,
             success: function (res) {
                 // 用户点击确定
@@ -226,6 +222,10 @@ function initEnvironment(canvasDom) {
             console.log('session on resize')
             calcCanvasSize()
         })
+
+        if (callback) {
+            callback()
+        }
 
         // 设置画布的大小
         calcCanvasSize()
@@ -292,6 +292,14 @@ function dispose() {
 
     if (devicePixelRatio) {
         devicePixelRatio = null
+    }
+
+    if (screenWidth) {
+        screenWidth = null
+    }
+
+    if (markerId) {
+        markerId = null
     }
 
     webglBusiness.dispose()

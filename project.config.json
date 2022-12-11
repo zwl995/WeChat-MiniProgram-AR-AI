@@ -51,7 +51,7 @@
     "useCompilerPlugins": false
   },
   "compileType": "miniprogram",
-  "libVersion": "2.20.2",
+  "libVersion": "2.28.0",
   "appid": "wxb4cdacc73d2d71c7",
   "projectname": "WeChat-AR-AI",
   "debugOptions": {

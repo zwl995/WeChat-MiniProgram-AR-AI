@@ -4,8 +4,6 @@ const { createScopedThreejs } = require('threejs-miniprogram');
 const { registerGLTFLoader } = require('../../utils/gltf-loader.js');
 // 相机每帧图像作为threejs场景的背景图
 const webglBusiness = require('./webglBusiness.js')
-// 绘制线条
-const { TubePainter } = require('./tubePainter.js')
 // 近截面
 const NEAR = 0.001
 // 远截面
@@ -18,52 +16,92 @@ var canvas;
 // threejs对象
 var THREE;
 // 自定义的3D模型
-var mainModel;
+var mainModel, mainPlane;
 // AR会话
 var session;
 // 光标模型、跟踪时间的对象
 var reticle, clock;
 // 保存3D模型的动画
 var mixers = [];
-// 绘制线条的工具
-var painter;
-// 是否开始绘制线条
-var isStartPaint = false;
-// 最近点击光标的位置
-var lastPoint;
 // 设备像素比例
 var devicePixelRatio;
+var screenWidth, screenHeight;
+var markerId;
+// 模型的默认缩放大小
+const modelScale = 0.1;
+// 平面遮罩层的默认缩放大小
+const planeScale = 0.28
 
-// 创建AR的坐标系
-function initWorldTrack(model) {
-    // 必须 hitTest 才会创建空间坐标系
-    const calPosition = function () {
-        const hitTestRes = session.hitTest(0.5, 0.5)
-        if (hitTestRes && hitTestRes.length) {
-            console.log('initWorld ok')
-
-            if (model) {
-                // 更新3D模型的姿态
-                model.matrixAutoUpdate = true
-                // 将hitTest返回的transform，变换到3D模型的姿态。
-                model.matrix.fromArray(hitTestRes[0].transform)
-                // 将矩阵分解到平移position、旋转quaternion，但不修改缩放scale。
-                model.matrix.decompose(model.position, model.quaternion, new THREE.Vector3())
-                // 添加模型到场景
-                scene.add(model)
-            }
-
-        } else {
-            // 如果创建不成功，则1秒后重试。
-            setTimeout(calPosition, 1000)
-        }
+function initWorldTrack() {
+    if (!session) {
+        console.log('The VKSession is not created.')
+        return
     }
-    calPosition()
+
+    // 检查API是否存在
+    if (!session.addMarker) {
+        return
+    }
+
+    session.on('addAnchors', anchors => {
+        // 发现新的平面
+        wx.hideLoading();
+    })
+
+    session.on('updateAnchors', anchors => {
+        // 更新平面
+    })
+
+    session.on('removeAnchors', anchors => {
+        // 当平面跟踪丢失时
+    })
+
+    wx.showLoading({
+        title: '请对准识别图...',
+    });
+
+    // 在session.start()成功后，session.addMarker()才会起作用。
+    addMarker()
 }
+
+function addMarker() {
+    if (markerId) {
+        return
+    }
+    // 如果文件路径包含新文件夹，则需要先创建文件夹。
+    const filePath = `${wx.env.USER_DATA_PATH}/image_pattern_1.jpg`
+    wx.downloadFile({
+        url: 'https://m.sanyue.red/wechat/imgs/image_pattern_1.jpg',
+        filePath,
+        success: () => {
+            // session.addMarker()需要等待session初始化完成，才能成功调用。
+            markerId = session.addMarker(filePath)
+            console.log('addMarker', filePath)
+        }
+    })
+}
+
+// 添加平面
+function addPlane(size) {
+    const geometry1 = new THREE.PlaneGeometry(size.width, size.height);
+    const material1 = new THREE.MeshBasicMaterial({
+        color: 'white',
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.5,
+    });
+    const plane1 = new THREE.Mesh(geometry1, material1);
+    // 缩放
+    plane1.scale.set(planeScale, planeScale, planeScale)
+    // 旋转90度
+    plane1.rotateX(-Math.PI / 2)
+    mainPlane = plane1;
+    scene.add(mainPlane);
+}
+
 
 // 加载3D模型
 function loadModel(modelUrl, callback) {
-
     var loader = new THREE.GLTFLoader();
     wx.showLoading({
         title: 'Loading Model...',
@@ -71,17 +109,16 @@ function loadModel(modelUrl, callback) {
     loader.load(modelUrl,
         function (gltf) {
             console.log('loadModel', 'success');
-            var model = gltf.scene;
-            var animations = gltf.animations;
-
-            // 矩阵更新只会影响父对象host_mainModel，不影响子对象model。
-            var host_mainModel = new THREE.Object3D()
-            host_mainModel.add(model)
-            mainModel = host_mainModel;
             wx.hideLoading();
+            var model = gltf.scene;
+            // 缩放
+            model.scale.set(modelScale, modelScale, modelScale)
+            mainModel = model;
+            scene.add(mainModel)
 
+            var animations = gltf.animations;
             if (callback) {
-                callback(mainModel, animations)
+                callback(model, animations);
             }
         },
         null,
@@ -125,31 +162,10 @@ function updateAnimation() {
     }
 }
 
-// 更新光标模型的位置
-function updateReticle() {
-    if (!reticle) {
-        return
-    }
-
-    const hitTestRes = session.hitTest(0.5, 0.5)
-
-    if (hitTestRes && hitTestRes.length) {
-        reticle.matrixAutoUpdate = true
-        reticle.matrix.fromArray(hitTestRes[0].transform)
-        // 将矩阵分解到平移position、旋转quaternion、缩放scale。
-        reticle.matrix.decompose(reticle.position, reticle.quaternion, new THREE.Vector3())
-        reticle.visible = true
-    } else {
-        reticle.visible = false
-    }
-}
-
 // 在threejs的每帧渲染中，使用AR相机更新threejs相机的变换。
 function render(frame) {
     // 更新threejs场景的背景
     webglBusiness.renderGL(frame)
-    // 更新光标模型的位置
-    updateReticle()
     // 更新3D模型的动画
     updateAnimation()
     // 从ar每帧图像获取ar相机对象
@@ -174,7 +190,7 @@ function render(frame) {
     renderer.state.setCullFace(THREE.CullFaceNone)
 }
 
-// 创建threejs场景
+
 function initTHREE() {
     THREE = createScopedThreejs(canvas)
     console.log('initTHREE')
@@ -195,25 +211,21 @@ function initTHREE() {
     light2.position.set(0, 0.2, 0.1)
     scene.add(light2)
 
-    // 绘制线条的辅助工具
-    painter = new TubePainter(THREE);
-    painter.setSize(0.4);
-    painter.mesh.material.side = THREE.DoubleSide;
-    scene.add(painter.mesh);
-
     // 渲染层
     renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true
     })
-
-    // gamma色彩空间校正，以适应人眼对亮度的感觉。
     renderer.gammaOutput = true
     renderer.gammaFactor = 2.2
 
-    // 时间跟踪器用作3D模型动画的更新
+    // 动画需要的
     clock = new THREE.Clock()
+
+    // 添加平面，应该与识别图像的宽度和高度比例相同
+    addPlane({ width: 3.75, height: 2.06 })
 }
+
 
 // 调整画布的大小
 function calcCanvasSize() {
@@ -221,18 +233,19 @@ function calcCanvasSize() {
 
     const info = wx.getSystemInfoSync()
     devicePixelRatio = info.pixelRatio
-    const width = info.windowWidth
-    const height = info.windowHeight
+    screenWidth = info.windowWidth
+    screenHeight = info.windowHeight
     /* 官方示例的代码
     canvas.width = width * devicePixelRatio / 2
     canvas.height = height * devicePixelRatio / 2
     */
+    renderer.setSize(screenWidth, screenHeight);
     renderer.setPixelRatio(devicePixelRatio);
-    renderer.setSize(width, height);
+
 }
 
 // 启动AR会话
-function initEnvironment(canvasDom) {
+function initEnvironment(canvasDom, callback) {
     console.log('initEnvironment')
     // 画布组件的对象
     canvas = canvasDom
@@ -241,9 +254,25 @@ function initEnvironment(canvasDom) {
     // 创建AR会话
     session = wx.createVKSession({
         track: {
-            plane: { mode: 1 },
+            marker: true,
         }
     })
+
+    if (!session.addMarker) {
+        wx.showModal({
+            title: '提示',
+            content: '由于该功能较新，需要微信版本号8.0.22以上运行。',
+            showCancel: false,
+            success: function (res) {
+                // 用户点击确定
+                if (res.confirm) {
+                    wx.navigateBack()
+                }
+            },
+        })
+        return
+    }
+
     // 开始AR会话
     session.start(err => {
         if (err) {
@@ -258,17 +287,20 @@ function initEnvironment(canvasDom) {
             calcCanvasSize()
         })
 
+        if (callback) {
+            callback()
+        }
+
         // 设置画布的大小
         calcCanvasSize()
-
         // 初始化webgl的背景
         webglBusiness.initGL(renderer)
-
         // 每帧渲染
         const onFrame = function (timestamp) {
             if (!session) {
                 return
             }
+
             // 从AR会话获取每帧图像
             const frame = session.getVKFrame(canvas.width, canvas.height)
             if (frame) {
@@ -279,72 +311,6 @@ function initEnvironment(canvasDom) {
         }
         session.requestAnimationFrame(onFrame)
     })
-}
-
-// 保存光标模型
-function setReticle(model) {
-    reticle = model
-    scene.add(reticle)
-}
-
-function addPoint(color) {
-    const geometry = new THREE.CylinderGeometry(0.03, 0.03, 0.03, 32);
-    const material = new THREE.MeshBasicMaterial({ color: color });
-    const cylinder = new THREE.Mesh(geometry, material);
-    addModelByReticle(cylinder, reticle, true)
-}
-
-// 在光标的位置放置3D模型
-function setRuler(callback) {
-    if (!reticle || !painter) {
-        return
-    }
-
-    const currentPoint = reticle.position
-    if (!isStartPaint) {
-        // 测量开始
-        isStartPaint = true
-        // 测量开始时，移动到点击光标的位置
-        painter.moveTo(currentPoint)
-        // 开始点
-        addPoint(0x66cc00)
-    } else {
-        // 测量结束
-        isStartPaint = false
-        // 测量过程中，绘制线条
-        painter.lineTo(currentPoint)
-        painter.update()
-        // 结束点
-        addPoint(0xff3300)
-
-        if (lastPoint) {
-            if (callback) {
-                // 测量的距离
-                var distance = currentPoint.distanceTo(lastPoint)
-                distance = (distance * 10).toFixed(1)
-                callback(distance)
-            }
-        }
-
-    }
-
-    // 保存最近点击光标的位置
-    lastPoint = currentPoint.clone()
-}
-
-// 在光标的位置放置3D模型
-// model:3D模型对象 
-// copyModel：被复制的3D模型对象 
-// isAddModel:是否将3D模型加入到threejs场景
-function addModelByReticle(model, copyModel, isAddModel) {
-    model.matrixAutoUpdate = true
-    model.position.copy(copyModel.position)
-    model.rotation.copy(copyModel.rotation)
-    console.log('addModelByReticle', copyModel.position)
-
-    if (isAddModel) {
-        scene.add(model)
-    }
 }
 
 // 将对象回收
@@ -383,30 +349,32 @@ function dispose() {
     if (session) {
         session = null
     }
+
     if (reticle) {
         reticle = null
     }
-    if (painter) {
-        painter = null
+
+    if (devicePixelRatio) {
+        devicePixelRatio = null
     }
-    if (lastPoint) {
-        lastPoint = null
+
+    if (screenWidth) {
+        screenWidth = null
+    }
+
+    if (markerId) {
+        markerId = null
     }
 
     webglBusiness.dispose()
 }
 
 module.exports = {
-    loadModel,
     render,
     initWorldTrack,
-    updateReticle,
     initEnvironment,
-    initTHREE,
+    loadModel,
     createAnimation,
     updateAnimation,
-    addModelByReticle,
-    setReticle,
-    setRuler,
     dispose,
 }

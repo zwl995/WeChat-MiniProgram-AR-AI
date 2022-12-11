@@ -15,3 +15,7 @@
 .color-red{
     color: red;
 }
+
+.weui-panel:first-child{
+    margin-top: 10px;
+}

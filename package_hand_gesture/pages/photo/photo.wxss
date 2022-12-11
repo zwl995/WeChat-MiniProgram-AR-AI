@@ -1,0 +1,35 @@
+.page__bd{
+    padding-bottom:0;
+}
+.page__bd_spacing{
+    padding-top:10px;
+}
+
+camera{
+    width: 375px; 
+    height: 500px;
+    z-index: 1;
+    margin:auto;
+}
+
+.canvasWebGL{
+    width: 375px; 
+    height: 500px;
+    z-index: 3;
+    margin:auto;
+}
+
+.canvas1{
+    width: 375px; 
+    height: 500px;
+    z-index: 2;
+    margin:auto;
+}
+
+.notice{
+    color:#00B0CF;
+    background:#000000;
+    opacity:0.6;
+    padding:10px;
+    text-align:center;
+}

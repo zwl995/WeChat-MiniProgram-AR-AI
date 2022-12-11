@@ -1,0 +1,22 @@
+.canvas1{
+    position:absolute;
+    height:100%;
+    width:100%;
+}
+
+#patternImage{
+    width:355px;
+    height:186px;
+    padding: 10px;
+}
+
+.hud{
+    position:absolute;
+    z-index: 2;
+    bottom: 0;
+}
+
+.hud_text{
+    color: white;
+    padding-left: 10px;
+}
